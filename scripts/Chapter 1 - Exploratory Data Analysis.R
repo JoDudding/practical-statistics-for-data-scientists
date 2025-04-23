@@ -18,8 +18,7 @@ dfw <- read_csv('data/dfw_airline.csv') |>
 
 sp500_px <- read_csv('data/sp500_data.csv.gz') |>
   rename(date = `...1`) |>
-  gather(-date, key = 'symbol', value = value) |>
-  glimpse()
+  #gather(-date, key = 'symbol', value = value)
 
 sp500_sym <- read_csv('data/sp500_sectors.csv')
 
@@ -194,28 +193,18 @@ dfw |>
 # Correlation -------------------------------------------------------------
 
 telecom <- sp500_px |>
-  semi_join(
+  filter(date > ymd('2012-07-01')) |>
+  select(
     sp500_sym |>
-      filter(sector == 'telecommunications_services'),
-    by = 'symbol'
-  ) |>
-  filter(date > ymd('2012-07-01'))
-
-etfs <- sp500_px |>
-  semi_join(
-    sp500_sym |>
-      filter(sector == 'etf'),
-    by = 'symbol'
-  ) |>
-  filter(date > ymd('2012-07-01'))
-
-## TODO include correlation
-#cor(telecom$value, telecom$symbol)
+      filter(sector == 'telecommunications_services') |>
+      pull(symbol)
+  )
 
 telecom |>
-  filter(symbol %in% c('T', 'VZ')) |>
-  select(date, symbol, value) |>
-  spread(key = symbol, value = value) |>
+  ggcorrplot::cor_pmat() |>
+  print()
+
+telecom |>
   ggplot(aes(T, VZ)) +
   geom_hline(yintercept = 0, alpha = 0.5) +
   geom_vline(xintercept = 0, alpha = 0.5) +
@@ -225,6 +214,28 @@ telecom |>
     y = 'Verizon (VZ)',
     title = 'ATT vs Verizon'
   )
+
+etfs <- sp500_px |>
+  filter(date > ymd('2012-07-01')) |>
+  select(
+    sp500_sym |>
+      filter(sector == 'etf') |>
+      pull(symbol)
+  )
+
+etfs |>
+  ggcorrplot::cor_pmat() |>
+  print()
+
+etfs |>
+  ggcorrplot::cor_pmat() |>
+  ggcorrplot::ggcorrplot(
+    method = 'circle',
+    type = 'upper',
+    colors = c(orange, "white", purple),
+    ggtheme = NULL
+  ) +
+  labs(title = 'Correlation for ETFs')
 
 # Exploring Two or More Variables -----------------------------------------
 
@@ -260,16 +271,64 @@ ggplot(kc_tax0, aes(sq_ft_tot_living, tax_assessed_value)) +
 
 # Two Categorical Variables -----------------------------------------------
 
-lc_loans
+lc_loans |>
+  tabyl(grade, status) |>
+  adorn_totals() |>
+  adorn_totals(where = 'col') |>
+  adorn_percentages() |>
+  adorn_pct_formatting() |>
+  adorn_ns(position = 'front') |>
+  as_tibble() |>
+  print()
 
-## TODO use geom time for cross tab, or tabyl
-
-### Two Categorical Variables
-# Load the `lc_loans` dataset
-
-x_tab <- CrossTable(lc_loans$grade, lc_loans$status,
-                    prop.c=FALSE, prop.chisq=FALSE, prop.t=FALSE)
-
+lc_loans |>
+  tabyl(grade, status) |>
+  adorn_totals() |>
+  adorn_totals(where = 'col') |>
+  gather(-grade, key = 'status', value = 'n') |>
+  mutate(
+    status = fct_reorder(status, n, .fun = sum) |>
+      fct_rev() |>
+      fct_relevel('Total', after = Inf)
+  ) |>
+  group_by(grade) |>
+  mutate(
+    row_pct = case_when(status != 'Total' ~ n / max(n))
+  ) |>
+  group_by(status) |>
+  mutate(
+    col_pct = case_when(grade != 'Total' ~ n / max(n)),
+    label = glue('
+      {comma(n)}
+      {coalesce(percent(row_pct), "-")}
+      {coalesce(percent(col_pct), "-")}
+    ')
+  ) |>
+  ungroup() |>
+  ggplot(aes(status, grade, fill = col_pct, label = label)) +
+  geom_tile(colour = 'white') +
+  geom_text(colour = 'white') +
+  scale_x_discrete(
+    expand = c(0, 0),
+    position = 'top'
+  ) +
+  scale_y_discrete(expand = c(0, 0), limits = rev)  +
+  scale_fill_jo_c(label = percent, na.value = chocolate) +
+  labs(
+    x = 'Status',
+    y = 'Grade',
+    fill = 'Column %',
+    title = 'Status by grade heatmap'
+  ) +
+  theme(
+    axis.line.x = element_blank(),
+    axis.line.y = element_blank(),
+    axis.text = element_text(size = rel(0.7)),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.key.size = unit(0.8, 'lines'),
+    legend.key.width = unit(3.5, 'lines')
+  )
 
 # Categorical and Numeric Data --------------------------------------------
 
