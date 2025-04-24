@@ -18,6 +18,7 @@ theme_set(
   theme_bw(base_size = 13) +
     theme(
       plot.title.position = "plot",
+      plot.caption.position = "plot",
       panel.border = element_rect(fill = NA, colour = NA)
     )
 )
@@ -52,6 +53,7 @@ scale_colour_jo_c <- function(...) {
 purple <- '#6800A8FF'
 chocolate <- '#502A00FF'
 orange <- '#F9973FFF'
+pink <- '#C5407EFF'
 
 purple_pal <- grDevices::colorRampPalette(c(purple, '#E1CEFFFF'))
 

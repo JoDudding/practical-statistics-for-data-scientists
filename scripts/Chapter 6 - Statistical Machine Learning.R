@@ -1,6 +1,14 @@
+#-------------------------------------------------------------------------------
 ## Practical Statistics for Data Scientists (R)
 ## Chapter 6. Statistical Machine Learning
 # > (c) 2019 Peter C. Bruce, Andrew Bruce, Peter Gedeck
+#-------------------------------------------------------------------------------
+
+# run setup ---------------------------------------------------------------
+
+source('scripts/_setup.r')
+
+# read datasets -----------------------------------------------------------
 
 # Import required R packages.
 

@@ -1,13 +1,21 @@
+#-------------------------------------------------------------------------------
 ## Practical Statistics for Data Scientists (R)
 ## Chapter 5. Classification
 # > (c) 2019 Peter C. Bruce, Andrew Bruce, Peter Gedeck
+#-------------------------------------------------------------------------------
+
+# run setup ---------------------------------------------------------------
+
+source('scripts/_setup.r')
+
+# read datasets -----------------------------------------------------------
+
+
 
 # Import required R packages.
 
 library(klaR)
 library(MASS)
-library(dplyr)
-library(ggplot2)
 library(FNN)
 library(mgcv)
 library(rpart)
@@ -28,7 +36,7 @@ full_train_set$outcome <- ordered(full_train_set$outcome, levels=c('paid off', '
 ## Naive Bayes
 ### The Naive Solution
 
-naive_model <- NaiveBayes(outcome ~ purpose_ + home_ + emp_len_, 
+naive_model <- NaiveBayes(outcome ~ purpose_ + home_ + emp_len_,
                           data = na.omit(loan_data))
 naive_model$table
 
@@ -44,15 +52,15 @@ print(predict(naive_model, new_loan))
 
 #### Example not in book
 
-less_naive <- NaiveBayes(outcome ~ borrower_score + payment_inc_ratio + 
+less_naive <- NaiveBayes(outcome ~ borrower_score + payment_inc_ratio +
                            purpose_ + home_ + emp_len_, data = loan_data)
 less_naive$table[1:2]
 
 stats <- less_naive$table[[1]]
 graph <- ggplot(data.frame(borrower_score=c(0,1)), aes(borrower_score)) +
-  stat_function(fun = dnorm, color='blue', linetype=1, 
+  stat_function(fun = dnorm, color='blue', linetype=1,
                 args=list(mean=stats[1, 1], sd=stats[1, 2])) +
-  stat_function(fun = dnorm, color='red', linetype=2, 
+  stat_function(fun = dnorm, color='red', linetype=2,
                 args=list(mean=stats[2, 1], sd=stats[2, 2])) +
   labs(y='probability')
 graph
@@ -81,8 +89,8 @@ print(head(pred$posterior))
 # graph <- ggplot(data=lda_df, aes(x=borrower_score, y=payment_inc_ratio, color=prob_default)) +
 #   geom_point(alpha=.6) +
 #   scale_color_gradient2(low='white', high='blue') +
-#   scale_x_continuous(expand=c(0,0)) + 
-#   scale_y_continuous(expand=c(0,0), lim=c(0, 20)) + 
+#   scale_x_continuous(expand=c(0,0)) +
+#   scale_y_continuous(expand=c(0,0), lim=c(0, 20)) +
 #   geom_line(data=lda_df0, col='darkgreen', size=2, alpha=.8) +
 #   theme_bw()
 # graph
@@ -101,8 +109,8 @@ intercept = center[2] - center[1] * slope
 graph <- ggplot(data=lda_df, aes(x=borrower_score, y=payment_inc_ratio, color=prob_default)) +
   geom_point(alpha=.6) +
   scale_color_gradientn(colors=c('#ca0020', '#f7f7f7', '#0571b0')) +
-  scale_x_continuous(expand=c(0,0)) + 
-  scale_y_continuous(expand=c(0,0), lim=c(0, 20)) + 
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0), lim=c(0, 20)) +
   geom_abline(slope=slope, intercept=intercept, color='darkgreen') +
   theme_bw()
 
@@ -111,7 +119,7 @@ graph
 ## Logistic regression
 ### Logistic Response Function and Logit
 
-logistic_model <- glm(outcome ~ payment_inc_ratio + purpose_ + 
+logistic_model <- glm(outcome ~ payment_inc_ratio + purpose_ +
                         home_ + emp_len_ + borrower_score,
                       data=loan_data, family='binomial')
 logistic_model
@@ -147,7 +155,7 @@ graph
 
 ### Logistic regression with splines
 
-logistic_gam <- gam(outcome ~ s(payment_inc_ratio) + purpose_ + 
+logistic_gam <- gam(outcome ~ s(payment_inc_ratio) + purpose_ +
                       home_ + emp_len_ + s(borrower_score),
                     data=loan_data, family='binomial')
 logistic_gam
@@ -162,7 +170,7 @@ df <- data.frame(payment_inc_ratio = loan_data[, 'payment_inc_ratio'],
 
 graph <- ggplot(df, aes(x=payment_inc_ratio, y=partial_resid, solid = FALSE)) +
   geom_point(shape=46, alpha=0.4) +
-  geom_line(aes(x=payment_inc_ratio, y=terms), 
+  geom_line(aes(x=payment_inc_ratio, y=terms),
             color='red', alpha=0.5, size=1.5) +
   labs(y='Partial Residual') +
   coord_cartesian(xlim=c(0, 25)) +
@@ -175,7 +183,7 @@ df <- data.frame(payment_inc_ratio = loan_data[, 'payment_inc_ratio'],
 
 graph <- ggplot(df, aes(x=payment_inc_ratio, y=partial_resid, solid = FALSE)) +
   geom_point(shape=46, alpha=0.4) +
-  geom_line(aes(x=payment_inc_ratio, y=terms), 
+  geom_line(aes(x=payment_inc_ratio, y=terms),
             color='red', alpha=0.5, size=1.5) +
   labs(y='Partial Residual') +
   coord_cartesian(xlim=c(0, 25)) +
@@ -216,9 +224,9 @@ specificity <- (sum(true_y == 0) - cumsum(true_y[idx] == 0)) / sum(true_y == 0)
 roc_df <- data.frame(recall = recall, specificity = specificity)
 
 graph <- ggplot(roc_df, aes(x=specificity, y=recall)) +
-  geom_line(color='blue') + 
+  geom_line(color='blue') +
   scale_x_reverse(expand=c(0, 0)) +
-  scale_y_continuous(expand=c(0, 0)) + 
+  scale_y_continuous(expand=c(0, 0)) +
   geom_line(data=data.frame(x=(0:100) / 100), aes(x=x, y=1-x),
             linetype='dotted', color='red') +
   theme_bw() + theme(plot.margin=unit(c(5.5, 10, 5.5, 5.5), "points"))
@@ -242,7 +250,7 @@ graph
 
 mean(full_train_set$outcome=='default')
 
-full_model <- glm(outcome ~ payment_inc_ratio + purpose_ + home_ + 
+full_model <- glm(outcome ~ payment_inc_ratio + purpose_ + home_ +
                             emp_len_+ dti + revol_bal + revol_util,
                   data=full_train_set, family='binomial')
 pred <- predict(full_model)
@@ -252,17 +260,17 @@ mean(pred > 0)
 
 ### Oversampling and Up/Down Weighting
 
-wt <- ifelse(full_train_set$outcome=='default', 
+wt <- ifelse(full_train_set$outcome=='default',
              1 / mean(full_train_set$outcome == 'default'), 1)
-full_model <- glm(outcome ~ payment_inc_ratio + purpose_ + 
+full_model <- glm(outcome ~ payment_inc_ratio + purpose_ +
                   home_ + emp_len_+ dti + revol_bal + revol_util,
                   data=full_train_set, weight=wt, family='quasibinomial')
 pred <- predict(full_model)
 mean(pred > 0)
 
 ### Data Generation
-# There are a variety of SMOTE implementation available in R. The package `unbalanced` provides SMOTE and other methods. Unfortunately, it's not working for your dataset. 
-# 
+# There are a variety of SMOTE implementation available in R. The package `unbalanced` provides SMOTE and other methods. Unfortunately, it's not working for your dataset.
+#
 # The SMOTE implementation in the package `DMwR` works. However `DMwR` is no longer supported.
 
 loan_data_samp <- sample_frac(full_train_set, .05)
@@ -270,13 +278,13 @@ loan_data_samp <- sample_frac(full_train_set, .05)
 # # install.packages('unbalanced')
 # library(unbalanced)
 # head(full_train_set)
-# smote_data <- ubSMOTE(loan_data_samp, loan_data_samp$outcome, 
+# smote_data <- ubSMOTE(loan_data_samp, loan_data_samp$outcome,
 #                       perc.over = 2000, k = 5, perc.under = 100)
 # head(smote_data)
 
 # install.packages('DMwR')
 # library(DMwR)
-# smote_data <- SMOTE(outcome ~ ., loan_data_samp, 
+# smote_data <- SMOTE(outcome ~ ., loan_data_samp,
 #                     perc.over = 2000, perc.under=100)
 # dim(loan_data_samp)
 # dim(smote_data)
@@ -285,7 +293,7 @@ loan_data_samp <- sample_frac(full_train_set, .05)
 ### Exploring the Predictions
 
 loan_tree <- rpart(outcome ~ borrower_score + payment_inc_ratio,
-                   data=loan3000, 
+                   data=loan3000,
                    control = rpart.control(cp=.005))
 
 geom_abline(slope=slope, intercept=intercept, color='darkgreen')

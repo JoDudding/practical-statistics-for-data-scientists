@@ -1,27 +1,39 @@
+#-------------------------------------------------------------------------------
 ## Practical Statistics for Data Scientists (R)
 ## Chapter 7. Unsupervised Learning
 # > (c) 2019 Peter C. Bruce, Andrew Bruce, Peter Gedeck
+#-------------------------------------------------------------------------------
+
+# run setup ---------------------------------------------------------------
+
+source('scripts/_setup.r')
+
+# read datasets -----------------------------------------------------------
+
+sp500_px <- read_csv('data/sp500_data.csv.gz') |>
+  rename(date = `...1`)
+
+sp500_sym <- read_csv('data/sp500_sectors.csv')
+
+loan_data <- read_csv('data/loan_data.csv.gz') |>
+  mutate(
+    outcome = factor(outcome, levels=c('paid off', 'default'), ordered = TRUE)
+  )
+
+housetasks <- read_csv('data/housetasks.csv')
+
+
 
 # Import required R packages.
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+
 library(lubridate)
 library(ellipse)
 library(mclust)
 library(cluster)
 library(ca)
 
-# Define paths to data sets. If you don't keep your data in the same directory as the code, adapt the path names.
 
-PSDS_PATH <- file.path(dirname(dirname(getwd())))
-
-sp500_px <- read.csv(file.path(PSDS_PATH, 'data', 'sp500_data.csv.gz'), row.names=1)
-sp500_sym <- read.csv(file.path(PSDS_PATH, 'data', 'sp500_sectors.csv'), stringsAsFactors = FALSE)
-loan_data <- read.csv(file.path(PSDS_PATH, 'data', 'loan_data.csv.gz'))
-loan_data$outcome <- ordered(loan_data$outcome, levels=c('paid off', 'default'))
-housetasks <- read.csv(file.path(PSDS_PATH, 'data', 'housetasks.csv'), row.names=1)
 
 ## Principal Components Analysis
 ### A simple example

@@ -17,8 +17,7 @@ dfw <- read_csv('data/dfw_airline.csv') |>
   janitor::clean_names()
 
 sp500_px <- read_csv('data/sp500_data.csv.gz') |>
-  rename(date = `...1`) |>
-  #gather(-date, key = 'symbol', value = value)
+  rename(date = `...1`)
 
 sp500_sym <- read_csv('data/sp500_sectors.csv')
 

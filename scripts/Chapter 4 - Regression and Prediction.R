@@ -1,35 +1,69 @@
+#-------------------------------------------------------------------------------
 ## Practical Statistics for Data Scientists (R)
 ## Chapter 4. Regression and Prediction
 # > (c) 2019 Peter C. Bruce, Andrew Bruce, Peter Gedeck
+#-------------------------------------------------------------------------------
+
+# run setup ---------------------------------------------------------------
+
+source('scripts/_setup.r')
+
+# read datasets -----------------------------------------------------------
+
+lung <- read_csv('data/LungDisease.csv') |>
+  clean_names()
+
+house_names <- readLines('data/house_sales.csv')[1] |>
+  str_split('\t') |>
+  unlist() |>
+  str_remove_all('"') |>
+  c('unknown_var')
+
+house <- read_delim(
+  'data/house_sales.csv',
+  delim = '\t',
+  col_names = house_names,
+  skip = 1
+) |>
+  clean_names()
+
+
 
 # Import required R packages.
 
 library(MASS)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(lubridate)
 library(splines)
 library(mgcv)
 
-# Define paths to data sets. If you don't keep your data in the same directory as the code, adapt the path names.
-
-PSDS_PATH <- file.path(dirname(dirname(getwd())))
 
 
-lung <- read.csv(file.path(PSDS_PATH, 'data', 'LungDisease.csv'))
-house <- read.csv(file.path(PSDS_PATH, 'data', 'house_sales.csv'), sep='\t')
+
 
 ## Simple Linear Regression
 ### The Regression Equation
 
-plot(lung$Exposure, lung$PEFR, xlab="Exposure", ylab="PEFR")
+lung_plot <- lung |>
+  ggplot(aes(exposure, pefr)) +
+  geom_point() +
+  labs(
+    x = "Exposure",
+    y = "PEFR"
+  )
 
-model <- lm(PEFR ~ Exposure, data=lung)
+lung_plot
+
+model <- lm(pefr ~ exposure, data = lung)
 model
 
-plot(lung$Exposure, lung$PEFR, xlab="Exposure", ylab="PEFR", ylim=c(300,450), type="n", xaxs="i")
+lung_plot +
+  geom_abline(intercept = model$coefficients[1], slope = model$coefficients[2])
+
+
+
+plot(lung$exposure, lung$pefr, xlab="Exposure", ylab="PEFR", ylim=c(300,450), type="n", xaxs="i")
+
 abline(a=model$coefficients[1], b=model$coefficients[2], col="blue", lwd=2)
+
 text(x=.3, y=model$coefficients[1], labels=expression("b"[0]),  adj=0, cex=1.5)
 x <- c(7.5, 17.5)
 y <- predict(model, newdata=data.frame(Exposure=x))
@@ -44,17 +78,21 @@ text(mean(x), 400, labels=expression(b[1] == frac(Delta ~ Y, Delta ~ X)), cex=1.
 fitted <- predict(model)
 resid <- residuals(model)
 
-lung1 <- lung %>%
-  mutate(Fitted=fitted,
-         positive = PEFR>Fitted) %>%
-  group_by(Exposure, positive) %>%
-  summarize(PEFR_max = max(PEFR),
-            PEFR_min = min(PEFR),
-            Fitted = first(Fitted),
-            .groups='keep') %>%
-  ungroup() %>%
-  mutate(PEFR = ifelse(positive, PEFR_max, PEFR_min)) %>%
-  arrange(Exposure)
+lung1 <- lung  |>
+  mutate(
+    fitted = fitted,
+    positive = pefr > fitted
+  ) |>
+  group_by(exposure, positive) |>
+  summarize(
+    pefr_max = max(pefr),
+    pefr_min = min(pefr),
+    fitted = first(fitted)
+  ) |>
+  ungroup() |>
+  mutate(pefr = if_else(positive, pefr_max, pefr_min)) |>
+  arrange(exposure) |>
+  print()
 
 plot(lung$Exposure, lung$PEFR, xlab="Exposure", ylab="PEFR")
 abline(a=model$coefficients[1], b=model$coefficients[2], col="blue", lwd=2)
