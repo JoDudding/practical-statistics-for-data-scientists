@@ -301,5 +301,19 @@ dist_plot(
   lambda = 3
 )
 
+dist_plot(
+  'exp',
+  x = 10, q = 10, p = 0.9,
+  text_desc = 'rate = 20%',
+  rate = 0.2
+)
+
+dist_plot(
+  'weibull',
+  x = 7, q = 7, p = 0.9,
+  text_desc = 'shape = 50%',
+  shape = 0.5
+)
+
 
 #-------------------------------------------------------------------------------
