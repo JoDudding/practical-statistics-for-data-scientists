@@ -91,8 +91,8 @@ ggplot(boot_x, aes(mean)) +
     geom_histogram(bins = 40) +
     geom_vline(xintercept = sample_mean, linetype = 2) +
     geom_path(aes(ci, 10), data = ci, size = 2, colour = orange) +
-    geom_path(aes(ci90[1], y), data = ci, size = 2, colour = orange) +
-    geom_path(aes(ci90[2], y), data = ci, size = 2, colour = orange) +
+    #geom_path(aes(ci90[1], y), data = ci, size = 2, colour = orange) +
+    #geom_path(aes(ci90[2], y), data = ci, size = 2, colour = orange) +
     annotate('text', x=sample_mean, y = 20, label = 'Sample mean',
       size = 6, colour = orange) +
     annotate('text', x=sample_mean, y =  8, label = '90% interval',
